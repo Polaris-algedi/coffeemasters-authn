@@ -54,13 +54,29 @@ app.use(
 );
 
 function findUser(email) {
-  const result = db.data.users.find((user) => user.email === email);
+  const result = db.data.users.filter((user) => user.email === email);
   if (result.length === 0) return null /*Or undefined */;
   return result;
 }
 
 // ADD HERE THE REST OF THE ENDPOINTS
+app.post("/auth/login", (req, res) => {
+  const user = findUser(req.body.email);
+
+  if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
+    res.status(400).send("Wrong email or password");
+    return;
+  } else {
+    res.status(200).send({
+      name: user.name,
+      email: user.email,
+    });
+  }
+});
+
 app.post("/auth/register", (req, res) => {
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(req.body.password, salt);
   // TODO : Add data validation !!!
 
   const user = {
