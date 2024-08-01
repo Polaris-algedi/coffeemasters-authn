@@ -4,6 +4,16 @@ import Router from "./Router.js";
 const Auth = {
   isLoggedIn: false,
   account: null,
+  postLogin: (response, user) => {
+    if (response.ok) {
+      Auth.isLoggedIn = true;
+      Auth.account = user;
+      Auth.updateStatus();
+      Router.go("/account");
+    } else {
+      alert(response.message);
+    }
+  },
   register: async (event) => {
     event.preventDefault();
     const user = {
@@ -13,19 +23,29 @@ const Auth = {
     };
 
     const result = await API.register(user);
-    console.log(result);
+    Auth.postLogin(result, user);
   },
 
   login: async (event) => {
     event.preventDefault();
 
-    const user = {
+    const credentials = {
       email: event.target["login_email"].value, // document.getElementById("login_email").value,
       password: event.target["login_password"].value, // document.getElementById("login_password").value,
     };
 
-    const result = await API.login(user);
-    console.log(result);
+    const result = await API.login(credentials);
+    Auth.postLogin(result, {
+      ...credentials,
+      name: result.name,
+    });
+  },
+
+  logout: () => {
+    Auth.isLoggedIn = false;
+    Auth.account = null;
+    Auth.updateStatus();
+    Router.go("/");
   },
 
   updateStatus() {
