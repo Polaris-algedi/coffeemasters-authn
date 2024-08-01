@@ -56,7 +56,7 @@ app.use(
 function findUser(email) {
   const result = db.data.users.filter((user) => user.email === email);
   if (result.length === 0) return null /*Or undefined */;
-  return result;
+  return result[0];
 }
 
 // ADD HERE THE REST OF THE ENDPOINTS
@@ -64,10 +64,11 @@ app.post("/auth/login", (req, res) => {
   const user = findUser(req.body.email);
 
   if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
-    res.status(400).send("Wrong email or password");
+    res.send({ ok: false, message: "Data is invalid" });
     return;
   } else {
-    res.status(200).send({
+    res.send({
+      ok: true,
       name: user.name,
       email: user.email,
     });
@@ -82,16 +83,16 @@ app.post("/auth/register", (req, res) => {
   const user = {
     name: req.body.name,
     email: req.body.email,
-    password: req.body.password,
+    password: hashedPassword,
   };
 
   if (findUser(user.email)) {
-    res.status(400).send("User already exists");
+    res.send({ ok: false, message: "User already exists" });
     return;
   } else {
     db.data.users.push(user);
     db.write();
-    res.status(200).send("User registered successfully");
+    res.send({ ok: true, message: "User created" });
   }
 });
 
